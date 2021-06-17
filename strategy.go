@@ -23,20 +23,26 @@ type BreakStrategyConfig struct {
 	ContinuousFailCntThreshold int64
 	FailRate                   float64
 }
-type BsFailCnt struct{}
-type BsContinuousFailCnt struct{}
-type BsFailRate struct{}
+type BsFailCnt struct {
+	*BreakStrategyConfig
+}
+type BsContinuousFailCnt struct {
+	*BreakStrategyConfig
+}
+type BsFailRate struct {
+	*BreakStrategyConfig
+}
 
 func (bsc BreakStrategyConfig) Factory() BreakStrategyFunc {
 	switch bsc.BreakStrategy {
 	case BREAK_STRATEGY_FAILCNT:
-		return &BsFailCnt{}
+		return &BsFailCnt{&bsc}
 		break
 	case BREAK_STRATEGY_CONTINIUOUSFAILCNT:
-		return &BsContinuousFailCnt{}
+		return &BsContinuousFailCnt{&bsc}
 		break
 	case BREAK_STRATEGY_FAILRATE:
-		return &BsFailRate{}
+		return &BsFailRate{&bsc}
 		break
 	default:
 		panic(fmt.Sprintf("unknown break strategy : %d", bsc.BreakStrategy))
@@ -45,11 +51,12 @@ func (bsc BreakStrategyConfig) Factory() BreakStrategyFunc {
 }
 
 func (bs *BsFailCnt) Adapter(metrics *Metrics) bool {
-	return true
+	return metrics.Norm.FailCnt >= bs.FailCntThreshold
 }
 func (bs *BsContinuousFailCnt) Adapter(metrics *Metrics) bool {
-	return true
+	return metrics.Norm.ContinuousFailCnt >= bs.ContinuousFailCntThreshold
 }
 func (bs *BsFailRate) Adapter(metrics *Metrics) bool {
-	return true
+	rate := float64(metrics.Norm.FailCnt / metrics.Norm.AllCnt)
+	return rate >= bs.FailRate
 }

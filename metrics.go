@@ -10,8 +10,8 @@ type Metrics struct {
 	Norm      *Norm
 }
 type Window struct {
-	WindowSize      time.Duration
-	WindowStartTime time.Time
+	Size      time.Duration
+	StartTime time.Time
 }
 type Norm struct {
 	AllCnt            int64
@@ -39,6 +39,8 @@ func (m *Metrics) Fail() {
 
 // 重启计数器
 func (m *Metrics) Restart(t time.Time) {
+	m.MetricsID++
+
 	// 指标重置
 	m.Norm.Reset()
 
@@ -49,15 +51,13 @@ func (m *Metrics) Restart(t time.Time) {
 }
 
 func (n *Norm) Reset() {
-	n = &Norm{
-		AllCnt:            0,
-		SuccCnt:           0,
-		FailCnt:           0,
-		ContinuousSuccCnt: 0,
-		ContinuousFailCnt: 0,
-	}
+	n.AllCnt = 0
+	n.SuccCnt = 0
+	n.FailCnt = 0
+	n.ContinuousSuccCnt = 0
+	n.ContinuousFailCnt = 0
 }
 
 func (w *Window) Next(t time.Time) {
-	w.WindowStartTime = t
+	w.StartTime = t
 }
